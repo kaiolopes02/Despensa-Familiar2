@@ -28,9 +28,6 @@
                 <button class="btn btn-icon" onclick="app.openShare()" title="Compartilhar">
                     <i class="fas fa-share-alt"></i>
                 </button>
-                <button class="btn btn-icon btn-danger" onclick="app.clearAll()" title="Limpar lista">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
             </div>
         </header>
 
@@ -83,6 +80,18 @@
             <input type="text" class="form-control" id="search-input" placeholder="Buscar itens..." oninput="app.search(this.value)">
         </div>
 
+        <!-- Action Buttons Row (Salvar e Limpar) -->
+        <div class="action-buttons-row">
+            <button class="btn btn-success action-btn" onclick="app.saveAndClear()">
+                <i class="fas fa-save"></i>
+                <span>Salvar no Histórico</span>
+            </button>
+            <button class="btn btn-danger action-btn" onclick="app.clearAll()">
+                <i class="fas fa-trash-alt"></i>
+                <span>Limpar Lista</span>
+            </button>
+        </div>
+
         <!-- Status Filters -->
         <div class="filter-tags" id="filter-tags">
             <button class="tag active" onclick="app.setFilter('all')">
@@ -129,9 +138,6 @@
                 </button>
             </div>
             <div class="history-list" id="history-list"></div>
-            <button class="btn btn-primary" onclick="app.saveCurrentToHistory()" style="width: 100%; margin-top: 16px;">
-                Salvar Lista Atual
-            </button>
         </div>
     </div>
 

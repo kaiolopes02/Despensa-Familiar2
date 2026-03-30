@@ -125,6 +125,16 @@ body {
     background: var(--primary-dark);
 }
 
+.btn-success {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.btn-success:hover {
+    background: #047857;
+}
+
 .btn-danger {
     color: var(--danger);
     border-color: var(--danger);
@@ -144,6 +154,23 @@ body {
 
 .btn-secondary {
     background: var(--bg-secondary);
+}
+
+/* Action Buttons Row */
+.action-buttons-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    font-weight: 600;
+}
+
+.action-btn i {
+    font-size: 1rem;
 }
 
 /* Stats Bar */
@@ -923,6 +950,10 @@ select.form-control {
     
     .stat-card {
         padding: 12px 8px;
+    }
+    
+    .action-buttons-row {
+        flex-direction: column;
     }
     
     .share-options {

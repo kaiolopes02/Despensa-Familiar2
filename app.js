@@ -1,6 +1,6 @@
 // app.js
 /**
- * Despensa - Lista de Compras Simplificada
+ * Despensa - Lista de Compras
  */
 
 const CONFIG = {
@@ -224,6 +224,12 @@ class DespensaApp {
         return false;
     }
 
+    // Verifica se item já existe (case insensitive e trim)
+    itemExists(name) {
+        const normalizedName = name.toLowerCase().trim();
+        return this.items.some(item => item.name.toLowerCase().trim() === normalizedName);
+    }
+
     addItem() {
         const nameInput = document.getElementById('item-name');
         const categoryInput = document.getElementById('item-category');
@@ -232,6 +238,13 @@ class DespensaApp {
         const name = nameInput.value.trim();
         if (!name) {
             this.showToast('Digite o nome do item', 'error');
+            nameInput.focus();
+            return;
+        }
+
+        // Verificar duplicado
+        if (this.itemExists(name)) {
+            this.showToast('Este item já existe na lista', 'error');
             nameInput.focus();
             return;
         }
@@ -268,13 +281,13 @@ class DespensaApp {
         }
     }
 
+    // Exclusão sem confirmação (apenas remoção direta)
     deleteItem(id) {
-        if (confirm('Excluir este item?')) {
-            this.items = this.items.filter(i => i.id !== id);
-            this.saveToStorage();
-            this.render();
-            this.updateStats();
-        }
+        this.items = this.items.filter(i => i.id !== id);
+        this.saveToStorage();
+        this.render();
+        this.updateStats();
+        this.showToast('Item removido', 'info');
     }
 
     startEdit(id) {
@@ -324,6 +337,26 @@ class DespensaApp {
         if (value < 1) value = 1;
         if (value > 99) value = 99;
         input.value = value;
+    }
+
+    // Novo método: Salvar no histórico e limpar lista
+    async saveAndClear() {
+        if (this.items.length === 0) {
+            this.showToast('Lista vazia', 'error');
+            return;
+        }
+
+        try {
+            await this.db.saveToHistory([...this.items]);
+            this.items = [];
+            this.saveToStorage();
+            this.render();
+            this.updateStats();
+            this.showToast('Lista salva no histórico e limpa', 'success');
+        } catch (error) {
+            this.showToast('Erro ao salvar', 'error');
+            console.error(error);
+        }
     }
 
     setFilter(filter) {
@@ -515,7 +548,6 @@ class DespensaApp {
         document.getElementById('stat-completed').textContent = completed;
     }
 
-    // Histórico
     async openHistory() {
         const history = await this.db.getHistory();
         const listEl = document.getElementById('history-list');
@@ -615,17 +647,6 @@ class DespensaApp {
         this.openModal('history-detail-modal');
     }
 
-    async saveCurrentToHistory() {
-        if (this.items.length === 0) {
-            this.showToast('Lista vazia', 'error');
-            return;
-        }
-        
-        await this.db.saveToHistory([...this.items]);
-        this.showToast('Lista salva', 'success');
-        this.closeModal('history-modal');
-    }
-
     async loadFromHistory(id) {
         const entry = await this.db.getHistoryItem(id);
         
@@ -647,7 +668,6 @@ class DespensaApp {
         }
     }
 
-    // Compartilhamento
     openShare() {
         const shareText = this.generateShareText();
         document.getElementById('share-text-content').textContent = shareText;
@@ -745,13 +765,14 @@ class DespensaApp {
         });
     }
 
+    // Apenas este método mantém confirmação (para limpar lista toda)
     clearAll() {
         if (this.items.length === 0) {
             this.showToast('Lista já está vazia', 'info');
             return;
         }
         
-        if (confirm('Limpar toda a lista?')) {
+        if (confirm('Tem certeza que deseja limpar toda a lista?')) {
             this.items = [];
             this.saveToStorage();
             this.render();
