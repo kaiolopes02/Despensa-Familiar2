@@ -1,0 +1,241 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#334155">
+    <title>Despensa - Lista de Compras</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-shopping-basket"></i> Despensa</h1>
+            
+            <div class="header-actions">
+                <button class="btn btn-icon" onclick="app.toggleTheme()" title="Alternar tema">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                <button class="btn btn-icon" onclick="app.openHistory()" title="Histórico">
+                    <i class="fas fa-history"></i>
+                </button>
+                <button class="btn btn-icon" onclick="app.openShare()" title="Compartilhar">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="btn btn-icon btn-danger" onclick="app.clearAll()" title="Limpar lista">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Itens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-pending">0</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-completed">0</div>
+                <div class="stat-label">Comprados</div>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <input type="text" class="form-control" id="item-name" placeholder="Nome do item..." maxlength="50">
+            
+            <div class="input-row">
+                <select class="form-control" id="item-category">
+                    <option value="food">Alimentos</option>
+                    <option value="produce">Hortifruti</option>
+                    <option value="beverages">Bebidas</option>
+                    <option value="cleaning">Limpeza</option>
+                    <option value="personal">Higiene</option>
+                    <option value="pet">Pets</option>
+                    <option value="other">Outros</option>
+                </select>
+                
+                <div class="quantity-wrapper">
+                    <button class="qty-btn" onclick="app.adjustQty(-1)">−</button>
+                    <input type="number" class="form-control qty-input" id="item-quantity" value="1" min="1" max="99">
+                    <button class="qty-btn" onclick="app.adjustQty(1)">+</button>
+                </div>
+                
+                <button class="btn btn-primary" onclick="app.addItem()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" class="form-control" id="search-input" placeholder="Buscar itens..." oninput="app.search(this.value)">
+        </div>
+
+        <!-- Status Filters -->
+        <div class="filter-tags" id="filter-tags">
+            <button class="tag active" onclick="app.setFilter('all')">
+                <i class="fas fa-list"></i>
+                <span>Todos</span>
+            </button>
+            <button class="tag" onclick="app.setFilter('pending')">
+                <i class="fas fa-clock"></i>
+                <span>Pendentes</span>
+            </button>
+            <button class="tag" onclick="app.setFilter('completed')">
+                <i class="fas fa-check"></i>
+                <span>Comprados</span>
+            </button>
+        </div>
+
+        <!-- Category Filter - Rolagem Lateral -->
+        <div class="category-filter-scroll">
+            <div class="category-chips" id="category-chips">
+                <button class="category-chip active" data-category="all" onclick="app.setCategoryFilter('all')">
+                    <i class="fas fa-th-large"></i>
+                    <span>Todas</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Categories Container -->
+        <div class="categories-container" id="categories-container"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class="fas fa-shopping-basket"></i>
+            <p>Lista vazia</p>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="history-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Histórico</h2>
+                <button class="modal-close" onclick="app.closeModal('history-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="history-list" id="history-list"></div>
+            <button class="btn btn-primary" onclick="app.saveCurrentToHistory()" style="width: 100%; margin-top: 16px;">
+                Salvar Lista Atual
+            </button>
+        </div>
+    </div>
+
+    <!-- History Detail Modal -->
+    <div class="modal-overlay" id="history-detail-modal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2>Detalhes</h2>
+                <button class="modal-close" onclick="app.closeModal('history-detail-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="history-detail-content"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="app.closeModal('history-detail-modal')">Voltar</button>
+                <button class="btn btn-primary" id="restore-history-btn">Restaurar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="share-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Compartilhar</h2>
+                <button class="modal-close" onclick="app.closeModal('share-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="share-options">
+                <button class="share-option-btn" onclick="app.shareTo('whatsapp')">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </button>
+                <button class="share-option-btn" onclick="app.shareTo('telegram')">
+                    <i class="fab fa-telegram"></i>
+                    <span>Telegram</span>
+                </button>
+                <button class="share-option-btn" onclick="app.shareTo('email')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email</span>
+                </button>
+                <button class="share-option-btn" onclick="app.shareTo('copy')">
+                    <i class="fas fa-copy"></i>
+                    <span>Copiar</span>
+                </button>
+            </div>
+
+            <div id="url-share-section" style="display: none; margin-top: 16px;">
+                <div class="share-url-container">
+                    <input type="text" class="share-url-input" id="share-url" readonly>
+                    <button class="btn btn-secondary" onclick="app.copyShareUrl()">Copiar</button>
+                </div>
+            </div>
+
+            <div class="share-text-preview">
+                <pre id="share-text-content" class="share-text-content"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Editar Item</h2>
+                <button class="modal-close" onclick="app.closeModal('edit-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" class="form-control" id="edit-name" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label>Categoria</label>
+                <select class="form-control" id="edit-category">
+                    <option value="food">Alimentos</option>
+                    <option value="produce">Hortifruti</option>
+                    <option value="beverages">Bebidas</option>
+                    <option value="cleaning">Limpeza</option>
+                    <option value="personal">Higiene</option>
+                    <option value="pet">Pets</option>
+                    <option value="other">Outros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantidade</label>
+                <div class="quantity-wrapper">
+                    <button class="qty-btn" onclick="app.adjustEditQty(-1)">−</button>
+                    <input type="number" class="form-control qty-input" id="edit-quantity" min="1" max="99">
+                    <button class="qty-btn" onclick="app.adjustEditQty(1)">+</button>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="app.saveEdit()" style="width: 100%; margin-top: 16px;">
+                Salvar
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
