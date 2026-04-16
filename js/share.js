@@ -39,27 +39,31 @@ function gerarTextoLista() {
     const itensPendentes = itens.filter(i => !i.comprado);
     const itensComprados = itens.filter(i => i.comprado);
     
-    let texto = '*Minha Lista de Compras*\n\n';
+    let texto = `*LISTA DE COMPRAS*\n`;
+    texto += `==================\n\n`;
     
     if (itensPendentes.length > 0) {
-        texto += '*Pendentes:*\n';
+        texto += `*PENDENTES (${itensPendentes.length} itens):*\n\n`;
         const categorias = ['Alimentos', 'Limpeza', 'Higiene', 'Outros'];
+        
         categorias.forEach(cat => {
             const itensCat = itensPendentes.filter(i => i.categoria === cat);
             if (itensCat.length > 0) {
-                texto += `\n*${cat}:*\n`;
+                texto += `*[ ${cat.toUpperCase()} ]*\n`;
                 itensCat.forEach(item => {
-                    texto += `• Item: ${item.nome} - Quantidade: ${item.quantidade}\n`;
+                    texto += `  • ${item.nome} - ${item.quantidade}\n`;
                 });
+                texto += `\n`;
             }
         });
     }
     
     if (itensComprados.length > 0) {
-        texto += '\n*Comprados:*\n';
+        texto += `*COMPRADOS (${itensComprados.length} itens):*\n`;
         itensComprados.forEach(item => {
-            texto += `• ~${item.nome}~\n`;
+            texto += `  • ~${item.nome}~\n`;
         });
+        texto += `\n`;
     }
     
     return texto;
@@ -69,9 +73,13 @@ function compartilharWhatsApp() {
     const texto = gerarTextoLista();
     const link = gerarDadosCompartilhamento();
     
-    const textoCompleto = link 
-        ? `${texto}\n\n *Link da lista:*\n${link}`
-        : `${texto}\n\n(Lista muito grande para link - ${itens.length}/${CONFIG.MAX_ITEMS} itens)`;
+    let textoCompleto = texto;
+    
+    if (link) {
+        textoCompleto += `*LINK DA LISTA:*\n${link}`;
+    } else {
+        textoCompleto += `Lista muito grande para gerar link (${itens.length}/${CONFIG.MAX_ITEMS} itens)`;
+    }
     
     const url = `https://wa.me/?text=${encodeURIComponent(textoCompleto)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -83,14 +91,17 @@ function compartilharWhatsApp() {
 function compartilharEmail() {
     const texto = gerarTextoLista();
     const link = gerarDadosCompartilhamento();
-    const assunto = 'Minha Lista de Compras';
+    const assunto = `Lista de Compras`;
     
-    let corpo;
+    let corpo = texto;
+    
     if (link) {
-        corpo = `${texto}\n\nLink da lista: ${link}`;
+        corpo += `\n*LINK DA LISTA:*\n${link}`;
     } else {
-        corpo = `${texto}\n\n[Lista muito grande para compartilhar via link - ${itens.length} itens]`;
+        corpo += `\nLista muito grande para compartilhar via link (${itens.length} itens)`;
     }
+    
+    corpo += '\n\n---\nEnviado via Lista de Compras';
     
     window.location.href = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
     
@@ -105,7 +116,7 @@ async function compartilharOutros() {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'Minha Lista de Compras',
+                title: 'Lista de Compras',
                 text: texto.replace(/\*/g, ''),
                 url: link || undefined
             });
@@ -121,8 +132,8 @@ async function compartilharOutros() {
     
     try {
         const textoCompartilhar = link 
-            ? `${texto.replace(/\*/g, '')}\n\n${link}`
-            : texto.replace(/\*/g, '');
+            ? `${texto}\n\nLink: ${link}`
+            : texto;
         await navigator.clipboard.writeText(textoCompartilhar);
         fecharModalCompartilhar();
         mostrarToast(link ? 'Link copiado!' : 'Texto copiado (lista muito grande para link)!');

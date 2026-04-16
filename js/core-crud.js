@@ -7,7 +7,7 @@ function verificarDuplicado(nome, excluirId = null) {
     if (nomeNormalizado.length === 0) return false;
     
     return itens.some(item => {
-        if (excluirId && item.id === excluirId) return false;
+        if (excluirId != null && item.id == excluirId) return false;
         return item.nome.toLowerCase().trim() === nomeNormalizado;
     });
 }
