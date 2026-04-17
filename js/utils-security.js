@@ -34,9 +34,17 @@ function sanitizarItem(item) {
     if (!CONFIG.CATEGORIAS_VALIDAS.includes(categoria)) {
         return null;
     }
+
+    let itemId = item.id;
+    if (typeof itemId === 'string') {
+        itemId = parseInt(itemId, 10);
+    }
+    if (typeof itemId !== 'number' || isNaN(itemId)) {
+        itemId = Date.now() + Math.random();
+    }
     
     return {
-        id: typeof item.id === 'number' && !isNaN(item.id) ? item.id : Date.now() + Math.random(),
+        id: itemId,
         nome: nome,
         quantidade: quantidade,
         categoria: categoria,
