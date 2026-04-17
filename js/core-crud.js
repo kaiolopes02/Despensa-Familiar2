@@ -2,12 +2,18 @@
 // AÇÕES CORE E CRUD (SEM CONFIRMAÇÃO)
 // ==========================================
 
+// Variável global para armazenar ID do item em edição (mobile-safe)
+let itemEditandoId = null;
+
 function verificarDuplicado(nome, excluirId = null) {
     const nomeNormalizado = nome.toLowerCase().trim();
     if (nomeNormalizado.length === 0) return false;
     
+    // Garante comparação string para evitar problemas de tipo
+    const idExcluir = excluirId != null ? String(excluirId) : null;
+    
     return itens.some(item => {
-        if (excluirId != null && String(item.id) === String(excluirId)) return false;
+        if (idExcluir && String(item.id) === idExcluir) return false;
         return item.nome.toLowerCase().trim() === nomeNormalizado;
     });
 }
@@ -98,6 +104,9 @@ function editarItem(id) {
     const item = itens.find(i => i.id === id);
     if (!item) return;
     
+    // Guarda o ID na variável global (confiável em mobile)
+    itemEditandoId = id;
+    
     document.getElementById('editId').value = item.id;
     document.getElementById('editNome').value = item.nome;
     document.getElementById('editQuantidade').value = item.quantidade;
@@ -111,14 +120,32 @@ function editarItem(id) {
 function salvarEdicao(event) {
     event.preventDefault();
     
-    const id = parseInt(document.getElementById('editId').value, 10);
+    // Usa a variável global primeiro (evita problemas com input hidden em mobile)
+    let id = itemEditandoId;
+    
+    // Fallback: tenta pegar do input se a variável estiver nula
+    if (id === null) {
+        const inputValue = document.getElementById('editId').value;
+        id = parseInt(inputValue, 10);
+    }
+    
+    // Validação final do ID
+    if (!id || isNaN(id)) {
+        mostrarToast('Erro ao identificar item. Feche e abra a edição novamente.');
+        return;
+    }
+    
     const nome = document.getElementById('editNome').value.trim();
     const quantidade = document.getElementById('editQuantidade').value.trim();
     const categoria = document.getElementById('editCategoria').value;
     
     if (!nome || !quantidade) return;
     
-    if (verificarDuplicado(nome, id)) {
+    // Otimização: se o nome não mudou, não verifica duplicado
+    const itemAtual = itens.find(i => String(i.id) === String(id));
+    const nomeMudou = !itemAtual || itemAtual.nome.toLowerCase().trim() !== nome.toLowerCase();
+    
+    if (nomeMudou && verificarDuplicado(nome, id)) {
         mostrarErroDuplicado('editNome', 'errorEditNome', true);
         mostrarToast(`"${escapeHtml(nome)}" já existe na lista!`);
         return;
@@ -126,7 +153,7 @@ function salvarEdicao(event) {
     
     mostrarErroDuplicado('editNome', 'errorEditNome', false);
     
-    const item = itens.find(i => i.id === id);
+    const item = itens.find(i => String(i.id) === String(id));
     if (item) {
         const nomeAntigo = item.nome;
         item.nome = nome;
@@ -146,6 +173,9 @@ function salvarEdicao(event) {
         fecharModal();
         mostrarToast('Item atualizado com sucesso!');
     }
+    
+    // Limpa a variável global após salvar
+    itemEditandoId = null;
 }
 
 function removerItem(id) {
