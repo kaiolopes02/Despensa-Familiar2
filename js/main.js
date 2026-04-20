@@ -36,7 +36,8 @@ function resetarLista() {
 }
 
 function setFiltro(filtro) {
-    if (!['todos', 'pendentes', 'comprados', 'recorrentes'].includes(filtro)) {
+    const filtrosValidos = ['todos', 'Alimentos', 'Limpeza', 'Higiene', 'Outros', 'recorrentes'];
+    if (!filtrosValidos.includes(filtro)) {
         return;
     }
     
@@ -54,10 +55,11 @@ function setFiltro(filtro) {
 
 function filtrarItens() {
     switch (filtroAtual) {
-        case 'pendentes':
-            return itens.filter(i => !i.comprado);
-        case 'comprados':
-            return itens.filter(i => i.comprado);
+        case 'Alimentos':
+        case 'Limpeza':
+        case 'Higiene':
+        case 'Outros':
+            return itens.filter(i => i.categoria === filtroAtual);
         case 'recorrentes':
             return itens.filter(i => i.recorrente);
         default:
@@ -77,17 +79,17 @@ function toggleModoSair() {
         btn.classList.add('active');
         badge.style.display = 'flex';
         
-        setFiltro('pendentes');
-        domCache.filtersContainer.style.display = 'none';
+        setFiltro('todos');
+        /* REMOVIDO: domCache.filtersContainer.style.display = 'none'; */
         
-        mostrarToast('Modo "Antes de sair" ativado!');
+        mostrarToast('Modo "No Mercado" ativado!');
     } else {
         body.classList.remove('modo-sair');
-        btn.innerHTML = '<i class="fas fa-walking"></i><span>Modo antes de sair</span>';
+        btn.innerHTML = '<i class="fas fa-walking"></i><span>No Mercado</span>';
         btn.classList.remove('active');
         badge.style.display = 'none';
         
-        domCache.filtersContainer.style.display = 'flex';
+        /* REMOVIDO: domCache.filtersContainer.style.display = 'flex'; */
         setFiltro('todos');
         
         mostrarToast('Modo normal restaurado');

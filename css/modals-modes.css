@@ -1,7 +1,7 @@
 /* Modo Sair */
 .modo-sair .item-actions,
 .modo-sair .categoria-count,
-.modo-sair .filters,
+/* REMOVIDO: .modo-sair .filters, */
 .modo-sair .form-section,
 .modo-sair .categoria-section:empty,
 .modo-sair .recorrentes-section {

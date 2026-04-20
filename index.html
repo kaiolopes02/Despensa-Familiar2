@@ -35,7 +35,7 @@
             <div class="header-actions">
                 <button class="btn btn-secondary btn-sm" id="btnModoSair" onclick="toggleModoSair()">
                     <i class="fas fa-walking"></i>
-                    <span>Modo antes de sair</span>
+                    <span>No Mercado</span>
                 </button>
                 <button class="btn btn-secondary btn-icon" onclick="abrirModalCompartilhar()" title="Compartilhar">
                     <i class="fas fa-share-alt"></i>
@@ -108,18 +108,27 @@
                 </div>
         </section>
 
+        <!-- FILTROS ATUALIZADOS: por categoria -->
         <div class="filters" id="filtersContainer">
             <button class="btn btn-secondary btn-sm active" onclick="setFiltro('todos')" data-filter="todos">
                 <i class="fas fa-th-large"></i>
                 Todos
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="setFiltro('pendentes')" data-filter="pendentes">
-                <i class="fas fa-circle"></i>
-                Pendentes
+            <button class="btn btn-secondary btn-sm" onclick="setFiltro('Alimentos')" data-filter="Alimentos">
+                <i class="fas fa-apple-alt"></i>
+                Alimentos
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="setFiltro('comprados')" data-filter="comprados">
-                <i class="fas fa-check-circle"></i>
-                Comprados
+            <button class="btn btn-secondary btn-sm" onclick="setFiltro('Limpeza')" data-filter="Limpeza">
+                <i class="fas fa-spray-can"></i>
+                Limpeza
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="setFiltro('Higiene')" data-filter="Higiene">
+                <i class="fas fa-pump-soap"></i>
+                Higiene
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="setFiltro('Outros')" data-filter="Outros">
+                <i class="fas fa-box"></i>
+                Outros
             </button>
             <button class="btn btn-secondary btn-sm" onclick="setFiltro('recorrentes')" data-filter="recorrentes">
                 <i class="fas fa-star"></i>

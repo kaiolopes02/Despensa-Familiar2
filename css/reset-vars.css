@@ -20,9 +20,9 @@
     --status-comprado: #d1fae5;
     --status-comprado-text: #065f46;
     
-    /* Cores do Tema */
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
+    /* Cores do Tema — AZUL */
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
     --danger: #ef4444;
     --danger-light: #fee2e2;
     --warning: #f59e0b;
