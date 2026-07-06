@@ -5,8 +5,13 @@
 // Variável global para armazenar ID do item em edição (mobile-safe)
 let itemEditandoId = null;
 
+function normalizarNome(nome) {
+    if (typeof nome !== 'string') return '';
+    return nome.toLowerCase().trim();
+}
+
 function verificarDuplicado(nome, excluirId = null) {
-    const nomeNormalizado = nome.toLowerCase().trim();
+    const nomeNormalizado = normalizarNome(nome);
     if (nomeNormalizado.length === 0) return false;
     
     // Garante comparação string para evitar problemas de tipo
@@ -14,7 +19,7 @@ function verificarDuplicado(nome, excluirId = null) {
     
     return itens.some(item => {
         if (idExcluir && String(item.id) === idExcluir) return false;
-        return item.nome.toLowerCase().trim() === nomeNormalizado;
+        return normalizarNome(item.nome) === nomeNormalizado;
     });
 }
 
@@ -35,6 +40,11 @@ function mostrarErroDuplicado(inputId, errorId, mostrar) {
 
 function adicionarItem(event) {
     event.preventDefault();
+    
+    if (!domCache || !domCache.nomeItem) {
+        mostrarToast('Aguardando aplicativo iniciar...');
+        return;
+    }
     
     const nome = domCache.nomeItem.value.trim();
     const quantidade = domCache.quantidadeItem.value.trim();
@@ -144,7 +154,7 @@ function salvarEdicao(event) {
     
     // Otimização: se o nome não mudou, não verifica duplicado
     const itemAtual = itens.find(i => String(i.id) === idStr);
-    const nomeMudou = !itemAtual || itemAtual.nome.toLowerCase().trim() !== nome.toLowerCase();
+    const nomeMudou = !itemAtual || normalizarNome(itemAtual.nome) !== nome.toLowerCase();
     
     if (nomeMudou && verificarDuplicado(nome, id)) {
         mostrarErroDuplicado('editNome', 'errorEditNome', true);
@@ -161,7 +171,7 @@ function salvarEdicao(event) {
         item.quantidade = quantidade;
         item.categoria = categoria;
         
-        const favorito = favoritos.find(f => f.nome.toLowerCase() === nomeAntigo.toLowerCase());
+        const favorito = favoritos.find(f => String(f.id) === String(item.id));
         if (favorito) {
             favorito.nome = nome;
             favorito.quantidade = quantidade;
@@ -198,9 +208,10 @@ function toggleRecorrente(id) {
     item.recorrente = !item.recorrente;
     
     if (item.recorrente) {
-        const jaExiste = favoritos.some(f => f.nome.toLowerCase() === item.nome.toLowerCase());
+        const jaExiste = favoritos.some(f => normalizarNome(f.nome) === normalizarNome(item.nome));
         if (!jaExiste) {
             favoritos.push({
+                id: item.id,
                 nome: item.nome,
                 quantidade: item.quantidade,
                 categoria: item.categoria
@@ -208,7 +219,8 @@ function toggleRecorrente(id) {
         }
         mostrarToast(`"${escapeHtml(item.nome)}" adicionado aos favoritos!`);
     } else {
-        favoritos = favoritos.filter(f => f.nome.toLowerCase() !== item.nome.toLowerCase());
+        // Remove favorito usando o ID do item (mais confiável que nome, que pode ter mudado)
+        favoritos = favoritos.filter(f => String(f.id) !== String(item.id));
         mostrarToast(`"${escapeHtml(item.nome)}" removido dos favoritos.`);
     }
     
@@ -223,18 +235,28 @@ function adicionarFavorito(nome, quantidade, categoria) {
     const nomeTrim = nome.trim();
     if (nomeTrim.length === 0 || nomeTrim.length > CONFIG.MAX_ITEM_LENGTH) return;
     
-    const existe = itens.some(i => i.nome.toLowerCase().trim() === nomeTrim.toLowerCase());
+    const existe = itens.some(i => normalizarNome(i.nome) === normalizarNome(nomeTrim));
     
     if (existe) {
         mostrarToast(`"${escapeHtml(nomeTrim)}" já está na lista!`);
         return;
     }
     
+    const qtd = String(quantidade || '').trim();
+    const qtdTruncada = qtd.length > CONFIG.MAX_QTD_LENGTH;
+    const qtdFinal = qtdTruncada ? qtd.substring(0, CONFIG.MAX_QTD_LENGTH) : qtd;
+    const catOrig = categoria || 'Outros';
+    const catFinal = CONFIG.CATEGORIAS_VALIDAS.includes(catOrig) ? catOrig : 'Outros';
+
+    if (qtdTruncada || catFinal !== catOrig) {
+        mostrarToast('Quantidade reduzida/categoria padronizada para "Outros".');
+    }
+    
     const novoItem = {
         id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`,
         nome: nomeTrim,
-        quantidade: String(quantidade || '').trim().substring(0, CONFIG.MAX_QTD_LENGTH),
-        categoria: CONFIG.CATEGORIAS_VALIDAS.includes(categoria) ? categoria : 'Outros',
+        quantidade: qtdFinal,
+        categoria: catFinal,
         comprado: false,
         recorrente: true,
         dataCriacao: new Date().toISOString()

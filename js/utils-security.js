@@ -27,14 +27,11 @@ function sanitizarItem(item) {
     
     const nome = String(item.nome || '').trim().substring(0, CONFIG.MAX_ITEM_LENGTH);
     const quantidade = String(item.quantidade || '').trim().substring(0, CONFIG.MAX_QTD_LENGTH);
-    const categoria = String(item.categoria || 'Outros');
+const categoria = String(item.categoria || 'Outros');
+    const catFinal = CONFIG.CATEGORIAS_VALIDAS.includes(categoria) ? categoria : 'Outros';
     
     if (!nome || !quantidade) return null;
     
-    if (!CONFIG.CATEGORIAS_VALIDAS.includes(categoria)) {
-        return null;
-    }
-
     let itemId = item.id;
     if (typeof itemId === 'number' && isNaN(itemId)) {
         itemId = null;
@@ -47,7 +44,7 @@ function sanitizarItem(item) {
         id: itemId,
         nome: nome,
         quantidade: quantidade,
-        categoria: categoria,
+        categoria: catFinal,
         comprado: Boolean(item.comprado),
         recorrente: Boolean(item.recorrente),
         dataCriacao: typeof item.dataCriacao === 'string' ? item.dataCriacao : new Date().toISOString()

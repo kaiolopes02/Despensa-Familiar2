@@ -170,6 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btnModoSair: document.getElementById('btnModoSair')
     };
     
+    const obrigatorios = ['listaContainer', 'nomeItem', 'quantidadeItem', 'categoriaItem', 'recorrentesList', 'modalEditar'];
+    const faltando = obrigatorios.filter(key => !domCache[key]);
+    if (faltando.length > 0) {
+        console.error('Elementos DOM ausentes:', faltando.join(', '));
+    }
+    
     try {
         processarDadosIniciais();
     } catch (e) {

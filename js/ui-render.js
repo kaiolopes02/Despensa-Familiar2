@@ -122,8 +122,8 @@ function criarElementoItem(item) {
 function renderizarRecorrentes() {
     const container = domCache.recorrentesList;
     
-    const nomesNaLista = new Set(itens.map(i => i.nome.toLowerCase()));
-    const disponiveis = favoritos.filter(fav => !nomesNaLista.has(fav.nome.toLowerCase()));
+    const nomesNaLista = new Set(itens.map(i => normalizarNome(i.nome)));
+    const disponiveis = favoritos.filter(fav => !nomesNaLista.has(normalizarNome(fav.nome)));
     
     if (favoritos.length === 0) {
         container.innerHTML = `
