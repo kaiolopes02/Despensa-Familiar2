@@ -108,6 +108,12 @@ function processarDadosIniciais() {
     const dadosCompartilhados = urlParams.get('d');
     
     if (dadosCompartilhados) {
+        if (dadosCompartilhados.length > CONFIG.MAX_URL_LENGTH) {
+            mostrarToast('Link muito longo. Use um link válido.');
+            carregarLocalStorage();
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
         try {
             let dadosDecodificados;
             
@@ -191,8 +197,45 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.id === 'modalCompartilhar') fecharModalCompartilhar();
     });
     
+    // Event delegation para itens da lista (evita memory leak de listeners órfãos)
+    domCache.listaContainer.addEventListener('change', (e) => {
+        if (e.target.classList.contains('item-checkbox')) {
+            const article = e.target.closest('.item');
+            if (article) {
+                marcarComprado(article.dataset.id);
+            }
+        }
+    });
+    
+    domCache.listaContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-action');
+        if (!btn) return;
+        const article = btn.closest('.item');
+        if (!article) return;
+        const id = article.dataset.id;
+        
+        if (btn.classList.contains('btn-star')) {
+            toggleRecorrente(id);
+        } else if (btn.classList.contains('btn-edit')) {
+            editarItem(id);
+        } else if (btn.classList.contains('btn-delete')) {
+            removerItem(id);
+        }
+    });
+    
+    // Event delegation para favoritos (tags recorrentes)
+    domCache.recorrentesList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.tag-recorrente');
+        if (!btn) return;
+        adicionarFavorito(btn.dataset.nome, btn.dataset.quantidade, btn.dataset.categoria);
+    });
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+            if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
+                return;
+            }
             fecharModal();
             fecharModalCompartilhar();
             if (modoSair) toggleModoSair();

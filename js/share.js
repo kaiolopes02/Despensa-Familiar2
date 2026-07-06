@@ -24,6 +24,17 @@ function gerarDadosCompartilhamento() {
     }));
     
     const jsonString = JSON.stringify(dadosParaCompartilhar);
+    
+    // Estimativa pré-compressão: LZString tipicamente reduz ~40-70% em dados repetitivos,
+    // mas pode crescer em dados não comprimíveis. Usa fator conservador 0.7 (não assume compressão ruim).
+    const estimativaComprimido = Math.ceil(jsonString.length * 0.7);
+    const estimativaUrl = window.location.origin.length + window.location.pathname.length + 3 + estimativaComprimido;
+    
+    if (estimativaUrl > CONFIG.MAX_URL_LENGTH && jsonString.length > CONFIG.MAX_URL_LENGTH) {
+        mostrarToast(`Lista muito grande (${itens.length} itens). Limite: ${CONFIG.MAX_ITEMS} itens.`);
+        return null;
+    }
+    
     const comprimido = LZString.compressToEncodedURIComponent(jsonString);
     const urlCompleta = `${window.location.origin}${window.location.pathname}?d=${comprimido}`;
     

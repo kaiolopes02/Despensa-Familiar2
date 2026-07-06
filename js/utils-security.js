@@ -36,11 +36,11 @@ function sanitizarItem(item) {
     }
 
     let itemId = item.id;
-    if (typeof itemId === 'string') {
-        itemId = parseInt(itemId, 10);
+    if (typeof itemId === 'number' && isNaN(itemId)) {
+        itemId = null;
     }
-    if (typeof itemId !== 'number' || isNaN(itemId)) {
-        itemId = Date.now() + Math.random();
+    if (itemId === undefined || itemId === null || itemId === '') {
+        itemId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`;
     }
     
     return {
@@ -65,8 +65,16 @@ function validarArrayItens(dados) {
 
 function salvarLocalStorage() {
     try {
-        const dados = JSON.stringify(itens);
-        const dadosFavoritos = JSON.stringify(favoritos);
+        const seen = new WeakSet();
+        const replacer = (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) return undefined;
+                seen.add(value);
+            }
+            return value;
+        };
+        const dados = JSON.stringify(itens, replacer);
+        const dadosFavoritos = JSON.stringify(favoritos, replacer);
         
         if (dados.length > 4 * 1024 * 1024) {
             console.warn('Dados muito grandes para localStorage');
@@ -87,19 +95,28 @@ function salvarLocalStorage() {
 }
 
 function carregarLocalStorage() {
-    try {
-        const dados = localStorage.getItem(CONFIG.STORAGE_KEY);
-        const dadosFavoritos = localStorage.getItem(CONFIG.FAVORITOS_KEY);
-        
-        if (dados) {
+    let itensRecuperados = null;
+    let favoritosRecuperados = null;
+    let erroItens = null;
+    let erroFavoritos = null;
+    
+    const dados = localStorage.getItem(CONFIG.STORAGE_KEY);
+    const dadosFavoritos = localStorage.getItem(CONFIG.FAVORITOS_KEY);
+    
+    if (dados) {
+        try {
             const parsed = JSON.parse(dados);
-            itens = validarArrayItens(parsed);
+            itensRecuperados = validarArrayItens(parsed);
+        } catch (e) {
+            erroItens = e;
         }
-        
-        if (dadosFavoritos) {
+    }
+    
+    if (dadosFavoritos) {
+        try {
             const parsed = JSON.parse(dadosFavoritos);
             if (Array.isArray(parsed)) {
-                favoritos = parsed
+                favoritosRecuperados = parsed
                     .filter(f => f && typeof f === 'object')
                     .map(f => ({
                         nome: String(f.nome || '').trim().substring(0, CONFIG.MAX_ITEM_LENGTH),
@@ -108,16 +125,34 @@ function carregarLocalStorage() {
                     }))
                     .filter(f => f.nome.length > 0);
             }
+        } catch (e) {
+            erroFavoritos = e;
         }
-    } catch (e) {
-        console.error('Erro ao carregar localStorage:', e);
-        itens = [];
-        favoritos = [];
+    }
+    
+    if (erroItens && erroFavoritos) {
+        console.error('Erro ao carregar localStorage (ambos):', erroItens, erroFavoritos);
+        mostrarToast('Dados corrompidos. Iniciando com lista vazia.');
         try {
             localStorage.removeItem(CONFIG.STORAGE_KEY);
             localStorage.removeItem(CONFIG.FAVORITOS_KEY);
         } catch (e2) {}
+        itens = [];
+        favoritos = [];
+        return;
     }
+    
+    if (erroItens) {
+        console.error('Erro ao carregar itens (parcial):', erroItens);
+        mostrarToast('Itens recuperados parcialmente. Favoritos preservados.');
+    }
+    if (erroFavoritos) {
+        console.error('Erro ao carregar favoritos (parcial):', erroFavoritos);
+        mostrarToast('Favoritos recuperados parcialmente. Itens preservados.');
+    }
+    
+    itens = itensRecuperados !== null ? itensRecuperados : [];
+    favoritos = favoritosRecuperados !== null ? favoritosRecuperados : [];
 }
 
 function atualizarStats() {

@@ -59,7 +59,7 @@ function adicionarItem(event) {
     mostrarErroDuplicado('nomeItem', 'errorNome', false);
     
     const novoItem = {
-        id: Date.now(),
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`,
         nome: nome,
         quantidade: quantidade,
         categoria: categoria,
@@ -87,7 +87,7 @@ function adicionarItem(event) {
 }
 
 function marcarComprado(id) {
-    const item = itens.find(i => i.id === id);
+    const item = itens.find(i => String(i.id) === String(id));
     if (item) {
         item.comprado = !item.comprado;
         salvarLocalStorage();
@@ -101,7 +101,7 @@ function marcarComprado(id) {
 }
 
 function editarItem(id) {
-    const item = itens.find(i => i.id === id);
+    const item = itens.find(i => String(i.id) === String(id));
     if (!item) return;
     
     // Guarda o ID na variável global (confiável em mobile)
@@ -126,14 +126,15 @@ function salvarEdicao(event) {
     // Fallback: tenta pegar do input se a variável estiver nula
     if (id === null) {
         const inputValue = document.getElementById('editId').value;
-        id = parseInt(inputValue, 10);
+        id = inputValue;
     }
     
-    // Validação final do ID
-    if (!id || isNaN(id)) {
+    // Validação final do ID (compara como string para suportar UUID e numbers)
+    if (id === '' || id === null || id === undefined) {
         mostrarToast('Erro ao identificar item. Feche e abra a edição novamente.');
         return;
     }
+    const idStr = String(id);
     
     const nome = document.getElementById('editNome').value.trim();
     const quantidade = document.getElementById('editQuantidade').value.trim();
@@ -142,7 +143,7 @@ function salvarEdicao(event) {
     if (!nome || !quantidade) return;
     
     // Otimização: se o nome não mudou, não verifica duplicado
-    const itemAtual = itens.find(i => String(i.id) === String(id));
+    const itemAtual = itens.find(i => String(i.id) === idStr);
     const nomeMudou = !itemAtual || itemAtual.nome.toLowerCase().trim() !== nome.toLowerCase();
     
     if (nomeMudou && verificarDuplicado(nome, id)) {
@@ -153,7 +154,7 @@ function salvarEdicao(event) {
     
     mostrarErroDuplicado('editNome', 'errorEditNome', false);
     
-    const item = itens.find(i => String(i.id) === String(id));
+    const item = itens.find(i => String(i.id) === idStr);
     if (item) {
         const nomeAntigo = item.nome;
         item.nome = nome;
@@ -179,10 +180,10 @@ function salvarEdicao(event) {
 }
 
 function removerItem(id) {
-    const item = itens.find(i => i.id === id);
+    const item = itens.find(i => String(i.id) === String(id));
     if (!item) return;
     
-    itens = itens.filter(i => i.id !== id);
+    itens = itens.filter(i => String(i.id) !== String(id));
     salvarLocalStorage();
     renderizarLista();
     renderizarRecorrentes();
@@ -191,7 +192,7 @@ function removerItem(id) {
 }
 
 function toggleRecorrente(id) {
-    const item = itens.find(i => i.id === id);
+    const item = itens.find(i => String(i.id) === String(id));
     if (!item) return;
     
     item.recorrente = !item.recorrente;
@@ -222,7 +223,7 @@ function adicionarFavorito(nome, quantidade, categoria) {
     const nomeTrim = nome.trim();
     if (nomeTrim.length === 0 || nomeTrim.length > CONFIG.MAX_ITEM_LENGTH) return;
     
-    const existe = itens.some(i => i.nome.toLowerCase() === nomeTrim.toLowerCase());
+    const existe = itens.some(i => i.nome.toLowerCase().trim() === nomeTrim.toLowerCase());
     
     if (existe) {
         mostrarToast(`"${escapeHtml(nomeTrim)}" já está na lista!`);
@@ -230,7 +231,7 @@ function adicionarFavorito(nome, quantidade, categoria) {
     }
     
     const novoItem = {
-        id: Date.now(),
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`,
         nome: nomeTrim,
         quantidade: String(quantidade || '').trim().substring(0, CONFIG.MAX_QTD_LENGTH),
         categoria: CONFIG.CATEGORIAS_VALIDAS.includes(categoria) ? categoria : 'Outros',

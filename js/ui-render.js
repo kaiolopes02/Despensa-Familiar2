@@ -116,18 +116,6 @@ function criarElementoItem(item) {
         </div>
     `;
     
-    const checkbox = article.querySelector('.item-checkbox');
-    checkbox.addEventListener('change', () => marcarComprado(item.id));
-    
-    const btnStar = article.querySelector('.btn-star');
-    btnStar.addEventListener('click', () => toggleRecorrente(item.id));
-    
-    const btnEdit = article.querySelector('.btn-edit');
-    btnEdit.addEventListener('click', () => editarItem(item.id));
-    
-    const btnDelete = article.querySelector('.btn-delete');
-    btnDelete.addEventListener('click', () => removerItem(item.id));
-    
     return article;
 }
 
@@ -159,8 +147,10 @@ function renderizarRecorrentes() {
     disponiveis.forEach(fav => {
         const btn = document.createElement('button');
         btn.className = 'tag-recorrente';
+        btn.dataset.nome = fav.nome;
+        btn.dataset.quantidade = fav.quantidade || '';
+        btn.dataset.categoria = fav.categoria || 'Outros';
         btn.innerHTML = `<i class="fas fa-plus" style="font-size: 0.875rem;"></i> ${escapeHtml(fav.nome)}`;
-        btn.addEventListener('click', () => adicionarFavorito(fav.nome, fav.quantidade, fav.categoria));
         container.appendChild(btn);
     });
 }
